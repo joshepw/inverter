@@ -1,0 +1,24 @@
+{
+  "name": "ep2000pro",
+  "version": "1.0.0",
+  "description": "Must EP2000Pro inverter info script",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dayjs": "^1.11.7",
+    "lodash": "^4.17.21",
+    "mime-types": "^2.1.35",
+    "modbus-serial": "^8.0.10",
+    "mqtt": "^4.3.7",
+    "node-telegram-bot-api": "^0.61.0",
+    "serialport": "^10.4.0",
+    "sqlite3": "^5.1.4",
+    "suncalc": "^1.9.0",
+    "websocket": "^1.0.34",
+    "ws": "^8.12.1"
+  }
+}
