@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue';
+import { reactive, onMounted, computed } from 'vue';
 import SmartHome from "./components/SmartHome.vue";
 import TopAnimation from "./components/TopAnimation.vue";
 import StatusBadge from "./components/StatusBadge.vue";
@@ -26,7 +26,7 @@ const historyPower = reactive({
 let ws = null;
 
 onMounted(() => {
-	ws = new WebSocket(`ws://${window.location.hostname}:8081`, 'echo-protocol');
+	ws = new WebSocket(`ws://${window.location.host}`, 'echo-protocol');
 
 	ws.onmessage = (event) => {
 		const data = JSON.parse(event.data);

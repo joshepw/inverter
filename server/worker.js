@@ -45,7 +45,7 @@ exports.Server = function () {
 		console.log(`${new Date()} Received request for ${request.url}`);
 
 		try {
-			let filePath = Path.join(__dirname, 'power-dashboard/dist', (new URL(`http://localhost${request.url}`)).pathname);
+			let filePath = Path.join(__dirname, '../dist', (new URL(`http://localhost${request.url}`)).pathname);
 
 			if (Fs.existsSync(filePath)) {
 				let stat = Fs.statSync(filePath);
@@ -152,6 +152,8 @@ exports.ResponseConsumption = function (request, db, ws) {
 		case 'year':
 			data.labels = Dayjs.monthsShort();
 			data.from = Dayjs().startOf('year').format('YYYY-MM-DD hh:mm:ss');
+			break;
+
 		default:
 			break;
 	}
@@ -184,7 +186,11 @@ exports.ResponseConsumption = function (request, db, ws) {
 	});
 };
 
-exports.Bot = (listener) => {
+exports.Bot = (listener, db) => {
+	if (!Config.Server.telegram.key) {
+		return;
+	}
+
 	const bot = new TelegramBot(Config.Server.telegram.key, { polling: true });
 
 	bot.onText(/\/echo/, (msg, match) => {
@@ -250,6 +256,11 @@ exports.Bot = (listener) => {
 
 			if (action === 'lines') {
 				text = `🔌 Line1 *${result.L1.Power}W* (*Load: ${result.L1.LoadPercent}%* / ${result.L1.Voltage}W / ${result.L1.Current}A) | 🔌 Line2 *${result.L2.Power}W* (*Load: ${result.L2.LoadPercent}%* / ${result.L2.Voltage}W / ${result.L2.Current}A)`;
+			}
+
+			if (action === 'register') {
+				db.run(`INSERT INTO users (id, username, chat_id) VALUES (${msg.from.id}, ${msg.from.username}, "${msg.chat.id}")`);
+				text = `Username @${msg.from.username} registered`;
 			}
 	
 			bot.editMessageText(text, opts);

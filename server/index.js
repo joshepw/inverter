@@ -6,7 +6,7 @@ const events = require('events');
 const activityEvent = new events.EventEmitter();
 const wws = Worker.Server();
 const db = Worker.Database();
-const bot = Worker.Bot(activityEvent);
+const bot = Worker.Bot(activityEvent, db);
 
 let lapsedSeconds = 0;
 let consumption = 0;

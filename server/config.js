@@ -1,5 +1,7 @@
+const argv = require('minimist')(process.argv.slice(2));
+
 exports.Serial = {
-	port: '/dev/tty.usbserial-110',
+	port: argv?.serial || '/dev/tty.usbserial-110',
 	config: { 
 		baudRate: 9600,
 		databits: 8,
@@ -14,7 +16,7 @@ exports.Coords = {
 };
 
 exports.Server = {
-	port: 8081,
+	port: argv?.port || 8081,
 	telegram: {
 		key: process.env.TELEGRAM_TOKEN,
 	},
