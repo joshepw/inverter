@@ -10,16 +10,17 @@
 	},
 	"dependencies": {
 		"chart.js": "^4.2.1",
-		"vue": "^3.2.47",
-		"vue-chartjs": "^5.2.0",
 		"dayjs": "^1.11.7",
 		"mime-types": "^2.1.35",
 		"minimist": "^1.2.8",
 		"modbus-serial": "^8.0.10",
 		"node-telegram-bot-api": "^0.61.0",
+		"pulljs": "^0.1.2",
 		"serialport": "^10.4.0",
 		"sqlite3": "^5.1.4",
 		"suncalc": "^1.9.0",
+		"vue": "^3.2.47",
+		"vue-chartjs": "^5.2.0",
 		"websocket": "^1.0.34"
 	},
 	"devDependencies": {

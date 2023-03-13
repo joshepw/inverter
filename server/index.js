@@ -11,6 +11,8 @@ const bot = Worker.Bot(activityEvent, db);
 let lapsedSeconds = 0;
 let consumption = 0;
 let systemFault = null;
+let lastAlert = null;
+let lastGridStatus = null;
 
 /**
  * @param {Models.Result} result 
@@ -24,6 +26,8 @@ const onSerialResult = function (result) {
 
 	consumption = (result.Output.Power / 3600) + consumption;
 
+	onUsersAlerts(result);
+
 	if (lapsedSeconds > 59) {
 		onLapsedMinute(result);
 		lapsedSeconds = 0;
@@ -33,6 +37,33 @@ const onSerialResult = function (result) {
 		lapsedSeconds++;
 	}
 };
+
+/**
+ * @param {Models.Result} result 
+ */
+const onUsersAlerts = function (result) {
+	if (result.Output.LoadPercent > 80 && lastAlert < (Date.now() - 1 * 60 * 1000)) {
+		alertRegisteredUsers('🔌 The load of charge is over 80%! Please stop and reduce the risk.');
+		lastAlert = Date.now();
+	} else if (result.Output.LoadPercent > 65 && lastAlert < (Date.now() - 5 * 60 * 1000)) {
+		alertRegisteredUsers('🔌 The load of charge is over 65%, please check the load.');
+		lastAlert = Date.now();
+	} else if (result.Output.LoadPercent > 50 && lastAlert < (Date.now() - 10 * 60 * 1000)) {
+		alertRegisteredUsers('🔌 The load of charge is over 50%, remeber reduce your consumption.');
+		lastAlert = Date.now();
+	}
+
+	if (lastGridStatus != result.Grid.State) {
+		alertRegisteredUsers(`🔌 The power line state changed to *${result.Grid.State}*.`);
+		lastGridStatus = result.Grid.State;
+	}
+};
+
+const alertRegisteredUsers = (message) => {
+	db.each('SELECT * FROM users', row => {
+		bot.sendMessage(row.id, message, { parse_mode: 'Markdown' });
+	});
+}
 
 /**
  * @param {Models.Result} result 

@@ -57,7 +57,7 @@ exports.Server = function () {
 						filePath = index;
 						stat = Fs.statSync(filePath);
 					} else {
-						throw 'Index not found';
+						throw new Error('Index not found');
 					}
 				}
 
@@ -117,16 +117,16 @@ exports.ResponseConsumption = function (request, db, ws) {
 		datasets: [
 			{
 				label: 'Power Line',
-				backgroundColor: 'rgba(80, 150, 127, 0.5)',
-				borderColor: 'rgba(80, 150, 127, 1)',
+				backgroundColor: 'rgba(101, 115, 193, 0.5)',
+				borderColor: 'rgba(101, 115, 193, 1)',
 				borderWidth: 2,
 				borderSkipped: false,
 				data: [],
 			},
 			{
 				label: 'Battery BackUp',
-				backgroundColor: 'rgba(101, 115, 193, 0.5)',
-				borderColor: 'rgba(101, 115, 193, 1)',
+				backgroundColor: 'rgba(80, 150, 127, 0.5)',
+				borderColor: 'rgba(80, 150, 127, 1)',
 				borderWidth: 2,
 				borderSkipped: false,
 				data: [],
@@ -193,77 +193,81 @@ exports.Bot = (listener, db) => {
 
 	const bot = new TelegramBot(Config.Server.telegram.key, { polling: true });
 
-	bot.onText(/\/echo/, (msg, match) => {
-		listener.once('result', (result) => {
-			bot.sendMessage(msg.chat.id, `Hi! the working state is *${result.Device.WorkState}*, with a load of *${result.Output.LoadPercent}% (${result.Output.Power}W)*. The actual state of battery is *${result.Battery.State}* with a capacity of *${result.Battery.SocPercent}%*. What do you want to know?`, {
-				parse_mode: 'Markdown',
-			});
-		});
-	});
-
 	bot.on('message', (msg) => {
-		bot.sendMessage(msg.chat.id, `Hi! What do you want to know?`, {
-			parse_mode: 'Markdown',
-			reply_markup: JSON.stringify({
-				inline_keyboard: [
-					[
-						{
-							text: 'Status',
-							callback_data: 'status',
-						},
-						{
-							text: 'Battery',
-							callback_data: 'battery',
-						},
-						{
-							text: 'Lines',
-							callback_data: 'lines',
-						},
-						{
-							text: 'Consumption',
-							callback_data: 'consumption',
-						},
-						{
-							text: 'Register alerts',
-							callback_data: 'register',
-						},
-					]
-				]
-			})
-		});
-	});
-
-	bot.on('callback_query', function onCallbackQuery(callbackQuery) {
-		const action = callbackQuery.data;
-		const msg = callbackQuery.message;
-
-		const opts = {
-			chat_id: msg.chat.id,
-			message_id: msg.message_id,
-			parse_mode: 'Markdown',
-		};
-
-		let text = 'See ya!';
-
 		listener.once('result', (result) => {
-			if (action === 'status') {
-				text = `The working state is *${result.Device.WorkState}*, with a load 🔌 of *${result.Output.LoadPercent}% (${result.Output.Power}W)*. The actual state of battery 🔋 is *${result.Battery.State}* with a capacity of *${result.Battery.SocPercent}%*`;
-			}
+			switch (msg.text) {
+				case 'Status':
+					bot.sendMessage(msg.chat.id, 
+						`The working state is *${result.Device.WorkState}*,` +
+						` with a load 🔌 of *${result.Output.LoadPercent}% (${result.Output.Power}W)*.
+						
+						The actual state of battery 🔋 is *${result.Battery.State}* with a capacity of *${result.Battery.SocPercent}%*`, 
+					{
+						parse_mode: 'Markdown',
+						reply_to_message_id: msg.message_id,
+					});
+					break;
+				case 'Battery':
+					bot.sendMessage(msg.chat.id, `🔋 *${result.Battery.State}* (*${result.Battery.SocPercent}%* - ${result.Battery.Temperature}˚C)`, {
+						parse_mode: 'Markdown',
+						reply_to_message_id: msg.message_id,
+					});
+					break;
+				case 'Lines':
+					bot.sendMessage(msg.chat.id, 
+						`🔌 Line1 *${result.L1.Power}W* (*Load: ${result.L1.LoadPercent}%* / ${result.L1.Voltage}W / ${result.L1.Current}A)
+						
+						🔌 Line2 *${result.L2.Power}W* (*Load: ${result.L2.LoadPercent}%* / ${result.L2.Voltage}W / ${result.L2.Current}A)`,
+					{
+						parse_mode: 'Markdown',
+						reply_to_message_id: msg.message_id,
+					});
+					break;
+				case 'Consumption':
+					db.all(`SELECT state, sum(power) as power FROM consumption WHERE timestamp > '${dDayjs().startOf('month').format('YYYY-MM-DD hh:mm:ss')}' GROUP BY state;`, (err, row) => {
+						let total = 0, battery = 0, grid = 0;
 
-			if (action === 'battery') {
-				text = `🔋 *${result.Battery.State}* (*${result.Battery.SocPercent}%* - ${result.Battery.Temperature}˚C)`;
-			}
+						row.forEach((i) => {
+							if (i.state == 'Power Line') {
+								grid += i.power;
+							}
 
-			if (action === 'lines') {
-				text = `🔌 Line1 *${result.L1.Power}W* (*Load: ${result.L1.LoadPercent}%* / ${result.L1.Voltage}W / ${result.L1.Current}A) | 🔌 Line2 *${result.L2.Power}W* (*Load: ${result.L2.LoadPercent}%* / ${result.L2.Voltage}W / ${result.L2.Current}A)`;
-			}
+							if (i.state == 'Battery BackUp') {
+								battery += i.power;
+							}
 
-			if (action === 'register') {
-				db.run(`INSERT INTO users (id, username, chat_id) VALUES (${msg.from.id}, ${msg.from.username}, "${msg.chat.id}")`);
-				text = `Username @${msg.from.username} registered`;
+							total += i.power;
+						});
+						
+						bot.sendMessage(msg.chat.id, `Total month consumption is ${Math.round(total)}W, 🔋 *${Math.round(battery)}W* 🔌 *${Math.round(grid)}*`, {
+							parse_mode: 'Markdown',
+							reply_to_message_id: msg.message_id,
+						});
+					});
+					break;
+				case 'Register alerts':
+					db.run(`INSERT INTO users (id, username, chat_id) VALUES (${msg.from.id}, ${msg.from.username}, "${msg.chat.id}")`);
+					bot.sendMessage(msg.chat.id, `Username @${msg.from.username} registered`, {
+						parse_mode: 'Markdown',
+						reply_to_message_id: msg.message_id,
+					});
+					break;
+			
+				default:
+					bot.sendMessage(msg.chat.id, `Hi! What do you want to know?`, {
+						parse_mode: 'Markdown',
+						reply_markup: JSON.stringify({
+							keyboard: [
+								'Status',
+								'Battery',
+								'Lines',
+								'Consumption',
+								'Register alerts',
+							]
+						})
+					});
+					break;
 			}
-	
-			bot.editMessageText(text, opts);
 		});
 	});
 

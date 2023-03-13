@@ -1,4 +1,5 @@
 <script setup>
+import Pull from 'pulljs';
 import { reactive, onMounted, computed } from 'vue';
 import SmartHome from "./components/SmartHome.vue";
 import TopAnimation from "./components/TopAnimation.vue";
@@ -26,7 +27,20 @@ const historyPower = reactive({
 let ws = null;
 
 onMounted(() => {
-	ws = new WebSocket(`ws://${window.location.host}`, 'echo-protocol');
+	Pull.init({
+		mainElement: '#app',
+		instructionsPullToRefresh: 'Pull to Refresh',
+		instructionsReleaseToRefresh: 'Release to Refresh',
+		instructionsRefreshing: 'Refreshing...',
+		onRefresh: () => window.location.reload(),
+	});
+
+	connectToServer();
+});
+
+const connectToServer = () => {
+	ws = new WebSocket(`ws://power.local`, 'echo-protocol');
+	// ws = new WebSocket(`ws://${window.location.host}`, 'echo-protocol');
 
 	ws.onmessage = (event) => {
 		const data = JSON.parse(event.data);
@@ -58,7 +72,7 @@ onMounted(() => {
 			format: 'month',
 		}));
 	};
-});
+};
 
 const batteryColor = computed(() => {
 	if (['In Use', 'Discharging'].includes(result.Battery?.State)) {
@@ -166,6 +180,10 @@ const onFilter = (value) => {
 			</DataChartBadge>
 		</transition>
 	</main>
+
+	<footer>
+		Made with ☕️ by <a href="https://github.com/joshepw">@joshepw</a> - Copyright {{ (new Date()).getFullYear() }}
+	</footer>
 </template>
 
 <style scoped>
@@ -225,6 +243,13 @@ main .chart-item .stats-icon img {
 	margin-right: 0.2rem;
 }
 
+footer {
+	padding: 1rem;
+	font-size: 14px;
+	opacity: 0.7;
+	text-align: center;
+}
+
 .v-enter-active,
 .v-leave-active {
 	transition: 0.5s ease;
@@ -234,4 +259,5 @@ main .chart-item .stats-icon img {
 .v-leave-to {
 	opacity: 0;
 	transform: translateY(-10px);
-}</style>
+}
+</style>
