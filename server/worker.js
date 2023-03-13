@@ -194,37 +194,35 @@ exports.Bot = (listener, db) => {
 	const bot = new TelegramBot(Config.Server.telegram.key, { polling: true });
 
 	bot.on('message', (msg) => {
+		console.log(`${new Date()} New message received from @${msg.from.username}`);
+
 		listener.once('result', (result) => {
 			switch (msg.text) {
 				case 'Status':
 					bot.sendMessage(msg.chat.id, 
-						`The working state is *${result.Device.WorkState}*,` +
-						` with a load 🔌 of *${result.Output.LoadPercent}% (${result.Output.Power}W)*.
-						
-						The actual state of battery 🔋 is *${result.Battery.State}* with a capacity of *${result.Battery.SocPercent}%*`, 
-					{
+						`The working state is *${result.Device.WorkState}*, ` +
+						`with a load 🔌 of *${result.Output.LoadPercent}% (${result.Output.Power}W)*.`, {
 						parse_mode: 'Markdown',
-						reply_to_message_id: msg.message_id,
+					});
+					bot.sendMessage(msg.chat.id, `The actual state of battery 🔋 is *${result.Battery.State}* with a capacity of *${result.Battery.SocPercent}%*`, {
+						parse_mode: 'Markdown',
 					});
 					break;
 				case 'Battery':
-					bot.sendMessage(msg.chat.id, `🔋 *${result.Battery.State}* (*${result.Battery.SocPercent}%* - ${result.Battery.Temperature}˚C)`, {
+					bot.sendMessage(msg.chat.id, `🔋 *${result.Battery.State}* (*${result.Battery.SocPercent}%*)`, {
 						parse_mode: 'Markdown',
-						reply_to_message_id: msg.message_id,
 					});
 					break;
 				case 'Lines':
-					bot.sendMessage(msg.chat.id, 
-						`🔌 Line1 *${result.L1.Power}W* (*Load: ${result.L1.LoadPercent}%* / ${result.L1.Voltage}W / ${result.L1.Current}A)
-						
-						🔌 Line2 *${result.L2.Power}W* (*Load: ${result.L2.LoadPercent}%* / ${result.L2.Voltage}W / ${result.L2.Current}A)`,
-					{
+					bot.sendMessage(msg.chat.id, `🔌 Line1 *${result.L1.Power}W* (*Load: ${result.L1.LoadPercent}%* / ${result.L1.Voltage}W)`, {
 						parse_mode: 'Markdown',
-						reply_to_message_id: msg.message_id,
+					});
+					bot.sendMessage(msg.chat.id, `🔌 Line2 *${result.L2.Power}W* (*Load: ${result.L2.LoadPercent}%* / ${result.L2.Voltage}W)`, {
+						parse_mode: 'Markdown',
 					});
 					break;
 				case 'Consumption':
-					db.all(`SELECT state, sum(power) as power FROM consumption WHERE timestamp > '${dDayjs().startOf('month').format('YYYY-MM-DD hh:mm:ss')}' GROUP BY state;`, (err, row) => {
+					db.all(`SELECT state, sum(power) as power FROM consumption WHERE timestamp > '${Dayjs().startOf('month').format('YYYY-MM-DD hh:mm:ss')}' GROUP BY state;`, (err, row) => {
 						let total = 0, battery = 0, grid = 0;
 
 						row.forEach((i) => {
@@ -239,30 +237,32 @@ exports.Bot = (listener, db) => {
 							total += i.power;
 						});
 						
-						bot.sendMessage(msg.chat.id, `Total month consumption is ${Math.round(total)}W, 🔋 *${Math.round(battery)}W* 🔌 *${Math.round(grid)}*`, {
+						bot.sendMessage(msg.chat.id, 
+							`Total month consumption is ${Math.round(total)}W.
+							` +
+							`🔋 *${Math.round(battery)}W* 🔌 *${Math.round(grid)}*`, {
 							parse_mode: 'Markdown',
-							reply_to_message_id: msg.message_id,
 						});
 					});
 					break;
 				case 'Register alerts':
-					db.run(`INSERT INTO users (id, username, chat_id) VALUES (${msg.from.id}, ${msg.from.username}, "${msg.chat.id}")`);
+					db.run(`INSERT INTO users (id, username, chat_id) VALUES (${msg.from.id}, "${msg.from.username}", "${msg.chat.id}")`);
 					bot.sendMessage(msg.chat.id, `Username @${msg.from.username} registered`, {
 						parse_mode: 'Markdown',
-						reply_to_message_id: msg.message_id,
 					});
 					break;
 			
 				default:
 					bot.sendMessage(msg.chat.id, `Hi! What do you want to know?`, {
 						parse_mode: 'Markdown',
+						reply_to_message_id: msg.message_id,
 						reply_markup: JSON.stringify({
 							keyboard: [
-								'Status',
-								'Battery',
-								'Lines',
-								'Consumption',
-								'Register alerts',
+								['Status'],
+								['Battery'],
+								['Lines'],
+								['Consumption'],
+								['Register alerts'],
 							]
 						})
 					});

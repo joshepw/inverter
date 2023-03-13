@@ -60,8 +60,11 @@ const onUsersAlerts = function (result) {
 };
 
 const alertRegisteredUsers = (message) => {
-	db.each('SELECT * FROM users', row => {
-		bot.sendMessage(row.id, message, { parse_mode: 'Markdown' });
+	console.log(`${new Date()} Sending alert: ${message}`);
+
+	db.each('SELECT username, chat_id FROM users', (err, row) => {
+		bot.sendMessage(row.chat_id, message, { parse_mode: 'Markdown' });
+		console.log(`${new Date()} Alert to @${row.username} [${row.chat_id}]`);
 	});
 }
 

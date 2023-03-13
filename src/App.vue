@@ -24,7 +24,13 @@ const historyPower = reactive({
 	consumption: null,
 });
 
+const state = reactive({
+	ws: null,
+	wsActive: false,
+});
+
 let ws = null;
+let wsActive = false;
 
 onMounted(() => {
 	// Pull.init({
@@ -39,9 +45,9 @@ onMounted(() => {
 });
 
 const connectToServer = () => {
-	ws = new WebSocket(`ws://${window.location.host}`, 'echo-protocol');
+	state.ws = new WebSocket(`ws://${window.location.hostname}`, 'echo-protocol');
 
-	ws.onmessage = (event) => {
+	state.ws.onmessage = (event) => {
 		const data = JSON.parse(event.data);
 
 		if (data.type == 'response') {
@@ -63,14 +69,20 @@ const connectToServer = () => {
 		}
 	};
 
-	ws.onopen = () => {
-		ws.send(JSON.stringify({ type: 'get:power' }));
+	state.ws.onopen = () => {
+		state.ws.send(JSON.stringify({ type: 'get:power' }));
 
-		ws.send(JSON.stringify({
+		state.ws.send(JSON.stringify({
 			type: 'get:consumption',
 			format: 'month',
 		}));
+
+		state.wsActive = true;
 	};
+
+	state.ws.onclose = () => {
+		state.wsActive = false;
+	}
 };
 
 const batteryColor = computed(() => {
@@ -105,6 +117,12 @@ const onFilter = (value) => {
 
 <template>
 	<header>
+		<transition>
+			<div v-if="!state.wsActive" class="icon-indicator" v-on:click="connectToServer">
+				<img src="./assets/fault.png" alt="" width="24">
+			</div>
+		</transition>
+
 		<TopAnimation :solar="result.Device.Sunlight" />
 
 		<div class="wrapper">
