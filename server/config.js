@@ -1,7 +1,7 @@
 const argv = require('minimist')(process.argv.slice(2));
 
 exports.Serial = {
-	port: argv?.serial || '/dev/tty.usbserial-110',
+	port: argv?.serial || '/dev/ttyUSB0',
 	config: { 
 		baudRate: 9600,
 		databits: 8,
