@@ -16,7 +16,7 @@ exports.Coords = {
 };
 
 exports.Server = {
-	port: argv?.port || 8081,
+	port: argv?.port || 80,
 	telegram: {
 		key: process.env.TELEGRAM_TOKEN,
 	},

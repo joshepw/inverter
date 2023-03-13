@@ -25,5 +25,16 @@
 	"devDependencies": {
 		"@vitejs/plugin-vue": "^4.0.0",
 		"vite": "^4.1.4"
+	},
+	"pkg": {
+		"scripts": "server/**/*.js",
+		"assets": "dist/**/*",
+		"targets": [
+			"node18-linux-arm64"
+		],
+		"outputPath": "bin"
+	},
+	"bin": {
+		"server": "./server/index.js"
 	}
 }
