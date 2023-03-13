@@ -27,13 +27,13 @@ const historyPower = reactive({
 let ws = null;
 
 onMounted(() => {
-	Pull.init({
-		mainElement: '#app',
-		instructionsPullToRefresh: 'Pull to Refresh',
-		instructionsReleaseToRefresh: 'Release to Refresh',
-		instructionsRefreshing: 'Refreshing...',
-		onRefresh: () => window.location.reload(),
-	});
+	// Pull.init({
+	// 	mainElement: '#app',
+	// 	instructionsPullToRefresh: 'Pull to Refresh',
+	// 	instructionsReleaseToRefresh: 'Release to Refresh',
+	// 	instructionsRefreshing: 'Refreshing...',
+	// 	onRefresh: () => window.location.reload(),
+	// });
 
 	connectToServer();
 });
