@@ -25,29 +25,27 @@ const historyPower = reactive({
 });
 
 const state = reactive({
-	ws: null,
 	wsActive: false,
 });
 
 let ws = null;
-let wsActive = false;
 
 onMounted(() => {
-	// Pull.init({
-	// 	mainElement: '#app',
-	// 	instructionsPullToRefresh: 'Pull to Refresh',
-	// 	instructionsReleaseToRefresh: 'Release to Refresh',
-	// 	instructionsRefreshing: 'Refreshing...',
-	// 	onRefresh: () => window.location.reload(),
-	// });
+	Pull.init({
+		instructionsPullToRefresh: 'Pull to Refresh',
+		instructionsReleaseToRefresh: 'Release to Refresh',
+		instructionsRefreshing: 'Refreshing...',
+		onRefresh: () => window.location.reload(),
+	});
 
 	connectToServer();
 });
 
 const connectToServer = () => {
-	state.ws = new WebSocket(`ws://${window.location.hostname}`, 'echo-protocol');
+	// state.ws = new WebSocket(`ws://${window.location.hostname}`, 'echo-protocol'); 
+	ws = new WebSocket(`ws://power.local`, 'echo-protocol');
 
-	state.ws.onmessage = (event) => {
+	ws.onmessage = (event) => {
 		const data = JSON.parse(event.data);
 
 		if (data.type == 'response') {
@@ -69,10 +67,10 @@ const connectToServer = () => {
 		}
 	};
 
-	state.ws.onopen = () => {
-		state.ws.send(JSON.stringify({ type: 'get:power' }));
+	ws.onopen = () => {
+		ws.send(JSON.stringify({ type: 'get:power' }));
 
-		state.ws.send(JSON.stringify({
+		ws.send(JSON.stringify({
 			type: 'get:consumption',
 			format: 'month',
 		}));
@@ -80,7 +78,7 @@ const connectToServer = () => {
 		state.wsActive = true;
 	};
 
-	state.ws.onclose = () => {
+	ws.onclose = () => {
 		state.wsActive = false;
 	}
 };
@@ -119,7 +117,7 @@ const onFilter = (value) => {
 	<header>
 		<transition>
 			<div v-if="!state.wsActive" class="icon-indicator" v-on:click="connectToServer">
-				<img src="./assets/fault.png" alt="" width="24">
+				<img src="./assets/reload.png" alt="" width="24">
 			</div>
 		</transition>
 

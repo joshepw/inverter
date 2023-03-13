@@ -57,8 +57,6 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 	-webkit-overflow-scrolling: touch;
 	clip-path: inset(0 0 30px 0);
-	overflow: hidden;
-	height: 100vh;
 }
 
 body::-webkit-scrollbar {
@@ -83,7 +81,6 @@ body::-webkit-scrollbar-thumb {
 	font-weight: normal;
 	-webkit-overflow-scrolling: touch;
 	clip-path: inset(0 0 30px 0);
-	overflow-x: auto;
 	height: 100%;
 }
 
