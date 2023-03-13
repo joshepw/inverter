@@ -42,8 +42,7 @@ onMounted(() => {
 });
 
 const connectToServer = () => {
-	// state.ws = new WebSocket(`ws://${window.location.hostname}`, 'echo-protocol'); 
-	ws = new WebSocket(`ws://power.local`, 'echo-protocol');
+	ws = new WebSocket(`ws://${window.location.hostname}`, 'echo-protocol'); 
 
 	ws.onmessage = (event) => {
 		const data = JSON.parse(event.data);
