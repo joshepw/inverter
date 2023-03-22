@@ -136,12 +136,13 @@ exports.ResponseConsumption = function (request, db, ws) {
 		battery: 0,
 		total: 0,
 		from: null,
+		type: request.format,
 	}
 
 	switch (request.format) {
 		case 'day':
-			const hours = Array.from(Array(24).keys());
-			data.labels = hours.map(i => Dayjs().subtract(i, 'hour').format('dd ha')).reverse(),
+			const hours = Array.from(Array(24).keys()).reverse();
+				data.labels = [];
 				data.from = Dayjs().subtract(24, 'hour').format('YYYY-MM-DD hh:mm:ss');
 			break;
 		case 'month':
@@ -164,7 +165,11 @@ exports.ResponseConsumption = function (request, db, ws) {
 		'year': ['%Y-%m', 'MMM'],
 	};
 
-	db.all(`SELECT state,sum(power)as power,strftime('${formats[request.format][0]}', timestamp)AS x FROM consumption WHERE timestamp > '${data.from}' GROUP BY strftime('${formats[request.format][0]}', timestamp),state;`, (err, row) => {
+	const query = `SELECT state, sum(power) as power, timestamp AS x FROM consumption WHERE timestamp > '${data.from}' GROUP BY strftime('${formats[request.format][0]}', timestamp), state;`;
+
+	console.log(`${new Date()} Start query: ${query}`);
+
+	db.all(query, (err, row) => {
 		row.forEach(i => {
 			if (i.state == 'Power Line') {
 				data.datasets[0].data.push({ x: Dayjs(i.x).format(formats[request.format][1]), y: Math.round(i.power) });

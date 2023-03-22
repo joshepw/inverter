@@ -42,7 +42,8 @@ onMounted(() => {
 });
 
 const connectToServer = () => {
-	ws = new WebSocket(`ws://${window.location.hostname}`, 'echo-protocol'); 
+	const protocol = window.location.protocol == 'https:' ? 'wss' : 'ws';
+	ws = new WebSocket(`${protocol}://${window.location.hostname}`, 'echo-protocol');
 
 	ws.onmessage = (event) => {
 		const data = JSON.parse(event.data);
@@ -63,7 +64,9 @@ const connectToServer = () => {
 
 		if (data.type == 'response:consumption') {
 			historyPower.consumption = data.payload;
+			console.debug(data);
 		}
+
 	};
 
 	ws.onopen = () => {

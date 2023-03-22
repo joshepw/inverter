@@ -17,7 +17,9 @@ import { reactive } from 'vue';
 
 const state = reactive({filter: 'month'});
 
-const emit = defineEmits(['filter']);
+const emit = defineEmits([
+	'filter'
+]);
 
 const props = defineProps({
 	data: Object,
@@ -78,7 +80,6 @@ const options = {
 };
 
 const onFilter = (value) => {
-	state.filter = value;
 	emit('filter', value);
 };
 </script>
@@ -91,9 +92,9 @@ const onFilter = (value) => {
 					<slot name="title"></slot>
 				</p>
 				<div class="selector">
-					<a href="javascript:;" :class="{active: state.filter == 'day'}" v-on:click="onFilter('day')">DAY</a>
-					<a href="javascript:;" :class="{active: state.filter == 'month'}" v-on:click="onFilter('month')">MONTH</a>
-					<a href="javascript:;" :class="{active: state.filter == 'year'}" v-on:click="onFilter('year')">YEAR</a>
+					<a href="javascript:;" :class="{active: data.type == 'day'}" v-on:click="onFilter('day')">DAY</a>
+					<a href="javascript:;" :class="{active: data.type == 'month'}" v-on:click="onFilter('month')">MONTH</a>
+					<a href="javascript:;" :class="{active: data.type == 'year'}" v-on:click="onFilter('year')">YEAR</a>
 				</div>
 			</div>
 

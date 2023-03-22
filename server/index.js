@@ -42,6 +42,10 @@ const onSerialResult = function (result) {
  * @param {Models.Result} result 
  */
 const onUsersAlerts = function (result) {
+	if (lastAlert == null) {
+		return;
+	}
+
 	if (result.Output.LoadPercent > 80 && lastAlert < (Date.now() - 1 * 60 * 1000)) {
 		alertRegisteredUsers('🔌 The load of charge is over 80%! Please stop and reduce the risk.');
 		lastAlert = Date.now();
